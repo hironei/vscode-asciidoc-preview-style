@@ -1,0 +1,31 @@
+{
+  "name": "vscode-asciidoc-preview-style",
+  "displayName": "AsciiDoc Preview Light 2026 Style",
+  "description": "Applies Light 2026 colors to AsciiDoc Preview (Asciidoctor VS Code) in every workspace, independent of the VS Code theme.",
+  "version": "0.0.1",
+  "publisher": "hironei",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hironei/vscode-asciidoc-preview-style.git"
+  },
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "categories": [
+    "Themes",
+    "Other"
+  ],
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
+  "extensionDependencies": [
+    "asciidoctor.asciidoctor-vscode"
+  ],
+  "contributes": {
+    "asciidoc.previewStyles": [
+      "./style.css"
+    ]
+  }
+}
