@@ -1,0 +1,293 @@
+/*
+ * Light 2026 colors for AsciiDoc Preview (Asciidoctor VS Code).
+ *
+ * The palette is the same as the Markdown Preview version and is extracted from
+ * VS Code's built-in "2026 Light" theme. Values are fixed and intentionally do
+ * not reference --vscode-* variables, so the preview stays light under dark and
+ * high-contrast themes.
+ *
+ * Load order: Asciidoctor VS Code inserts contributed preview styles BEFORE its
+ * own stylesheets (asciidoctor-editor*.css / asciidoctor-default.css). Because of
+ * that, equal-specificity rules in this file would lose to the standard CSS.
+ * Every rule below is therefore scoped with `:not(#l26)`, which adds one ID
+ * worth of specificity (1,0,0) without needing !important. The `l26` id is a
+ * never-used placeholder: the `:not()` is always true.
+ *
+ * Syntax: CSS nesting (VS Code 1.97+ ships a Chromium that supports it).
+ */
+
+:root:not(#l26) {
+  --l26-bg: #ffffff;
+  --l26-fg: #202020;
+  --l26-muted: #5c5c60;
+  --l26-link: #0069cc;
+  --l26-code-bg: #eaeaea;
+  --l26-quote-bg: #eaeaea;
+  --l26-quote-border: #c8c8cc;
+  --l26-border: #e2e2e5;
+  --l26-separator: #eeeeee;
+  --l26-table-head-bg: #fafafd;
+  --l26-selection: #0069cc40;
+
+  /* Admonition accents (fixed, readable on the light page). */
+  --l26-note: #0069cc;
+  --l26-tip: #1a7f37;
+  --l26-important: #8250df;
+  --l26-warning: #9a6700;
+  --l26-caution: #bc4c00;
+
+  color-scheme: light;
+
+  /*
+   * The default "vscode" preview style derives its colors from these --adoc-*
+   * variables (they are defined on :root by the standard stylesheet, not set
+   * inline), so pinning them here recolors the standard rules without copying
+   * each of them.
+   */
+  --adoc-fg: var(--l26-fg);
+  --adoc-muted: var(--l26-muted);
+  --adoc-border: var(--l26-border);
+  --adoc-link: var(--l26-link);
+  --adoc-link-active: var(--l26-link);
+  --adoc-code-bg: var(--l26-code-bg);
+  --adoc-surface-1: var(--l26-table-head-bg);
+  --adoc-surface-2: var(--l26-table-head-bg);
+  --adoc-note: var(--l26-note);
+  --adoc-tip: var(--l26-tip);
+  --adoc-important: var(--l26-important);
+  --adoc-warning: var(--l26-warning);
+  --adoc-caution: var(--l26-caution);
+}
+
+html:not(#l26) {
+  background-color: var(--l26-bg);
+}
+
+body:not(#l26) {
+  background-color: var(--l26-bg);
+  color: var(--l26-fg);
+
+  /* The standard stylesheet resets this one to transparent; keep it light. */
+  --vscode-textBlockQuote-background: var(--l26-quote-bg);
+
+  /* ---- Headings, text, links -------------------------------------- */
+  & :is(h1, h2, h3, h4, h5, h6, #toctitle, .sidebarblock > .content > .title) {
+    color: var(--l26-fg);
+  }
+
+  & :is(.sect1 > h2, h1.sect0, #header > h1:only-child, #content > h1:first-child:not([class])) {
+    border-color: var(--l26-border);
+  }
+
+  & :is(.title, caption.title, figcaption, #footer-text, .colist > table td:last-child, .attribution, #header .details) {
+    color: var(--l26-muted);
+  }
+
+  & #header .details {
+    border-bottom-color: var(--l26-border);
+  }
+
+  & a,
+  & a code {
+    color: var(--l26-link);
+  }
+
+  & a:hover,
+  & a:focus,
+  & a:active {
+    color: var(--l26-link);
+  }
+
+  & hr {
+    border-color: var(--l26-separator);
+  }
+
+  & ::selection {
+    background-color: var(--l26-selection);
+  }
+
+  /* ---- Table of contents ------------------------------------------ */
+  & #toc a {
+    color: var(--l26-fg);
+  }
+
+  & #toc a:hover {
+    color: var(--l26-link);
+  }
+
+  & :is(#content #toc, #header #toc, #header > h1:first-child + #toc) {
+    border-color: var(--l26-border);
+  }
+
+  & #content #toc {
+    background: var(--l26-table-head-bg);
+  }
+
+  /* Fixed sidebar TOC (`:toc: right`) is painted with the editor colors. */
+  & #toc.toc2 {
+    background: var(--l26-bg);
+    color: var(--l26-fg);
+    border-color: var(--l26-border);
+  }
+
+  /* ---- Inline code, code blocks ----------------------------------- */
+  & :not(pre):not([class^="L"]) > code {
+    color: var(--l26-fg);
+    background: var(--l26-code-bg);
+    border-color: var(--l26-separator);
+  }
+
+  & pre,
+  & pre code {
+    color: var(--l26-fg);
+  }
+
+  & :is(.listingblock, .literalblock) > .content > pre {
+    background: var(--l26-code-bg);
+    border-color: var(--l26-border);
+  }
+
+  & :is(.listingblock pre.highlight > code.hljs, .listingblock pre > code.hljs, pre.hljs code > div) {
+    background: transparent;
+    color: var(--l26-fg);
+  }
+
+  & kbd {
+    background: var(--l26-code-bg);
+    color: var(--l26-fg);
+    border-color: var(--l26-quote-border);
+    box-shadow: 0 1px 0 var(--l26-quote-border), 0 0 0 0.1em var(--l26-bg) inset;
+  }
+
+  /* Thumbnails and example frames draw their frame/shadow with currentColor. */
+  & :is(.thumb, .th) {
+    border-color: var(--l26-bg);
+    box-shadow: 0 0 0 1px var(--l26-border);
+  }
+
+  /* Callout badges follow the link color instead of the theme button color. */
+  & .conum[data-value] {
+    background: var(--l26-link);
+    /* The standard rule sets the text color with !important from the theme's
+     * button foreground, so this one declaration needs !important as well. */
+    color: #fff !important;
+    box-shadow: 0 0 0 1px #ffffff59;
+  }
+
+  /* ---- Syntax highlighting (highlight.js tokens, 2026 Light) ------- */
+  & pre :is(.hljs, .hljs-subst, .hljs-variable, .hljs-params, .hljs-function, .hljs-class) {
+    color: #1f2328;
+  }
+
+  & pre :is(.hljs-comment, .hljs-quote) {
+    color: #6e7781;
+  }
+
+  & pre :is(.hljs-keyword, .hljs-selector-tag, .hljs-meta .hljs-keyword, .hljs-formula, .hljs-literal, .hljs-doctag, .hljs-deletion, .hljs-name, .hljs-symbol) {
+    color: #cf222e;
+  }
+
+  & pre :is(.hljs-string, .hljs-regexp, .hljs-meta-string, .hljs-meta .hljs-string, .hljs-addition, .hljs-template-tag) {
+    color: #0a3069;
+  }
+
+  & pre :is(.hljs-number, .hljs-attr, .hljs-attribute, .hljs-built_in, .hljs-builtin-name, .hljs-class .hljs-title, .hljs-type, .hljs-selector-attr, .hljs-selector-class, .hljs-selector-id) {
+    color: #0550ae;
+  }
+
+  & pre :is(.hljs-title, .hljs-section, .hljs-function .hljs-title, .hljs-tag, .hljs-selector-pseudo) {
+    color: #8250df;
+  }
+
+  & pre :is(.hljs-bullet, .hljs-link, .hljs-meta, .hljs-template-variable) {
+    color: #953800;
+  }
+
+  /* ---- Quote / verse ---------------------------------------------- */
+  & :is(.quoteblock, .verseblock) {
+    background: var(--l26-quote-bg);
+    border-left-color: var(--l26-quote-border);
+    color: var(--l26-fg);
+    --adoc-marker-gap: var(--l26-quote-bg);
+  }
+
+  & .quoteblock blockquote,
+  & .quoteblock p,
+  & .verseblock pre {
+    color: var(--l26-fg);
+    background: transparent;
+  }
+
+  /* ---- Sidebar, example, collapsible blocks ------------------------ */
+  & .sidebarblock {
+    background: var(--l26-table-head-bg);
+    border-color: var(--l26-border);
+    color: var(--l26-fg);
+    --adoc-marker-gap: var(--l26-table-head-bg);
+  }
+
+  & .exampleblock > .content {
+    background: var(--l26-bg);
+    border-color: var(--l26-border);
+    box-shadow: 0 1px 4px var(--l26-border);
+    color: var(--l26-fg);
+    --adoc-marker-gap: var(--l26-bg);
+  }
+
+  & details {
+    background: var(--l26-table-head-bg);
+    border-color: var(--l26-border);
+    --adoc-marker-gap: var(--l26-table-head-bg);
+  }
+
+  & details > summary {
+    color: var(--l26-link);
+  }
+
+  /* ---- Admonitions ------------------------------------------------ */
+  & .admonitionblock > table {
+    --adoc-marker-gap: color-mix(in srgb, var(--adoc-accent, var(--l26-fg)) 8%, var(--l26-bg));
+  }
+
+  & .admonitionblock > table td.content {
+    color: var(--l26-fg);
+    border-color: var(--l26-border);
+  }
+
+  /* ---- Tables ----------------------------------------------------- */
+  & :is(table.tableblock, th.tableblock, td.tableblock) {
+    border-color: var(--l26-border);
+  }
+
+  & table.tableblock {
+    background: var(--l26-bg);
+  }
+
+  & table.tableblock > :is(thead, tfoot) > tr > :is(th, td) {
+    background: var(--l26-table-head-bg);
+    color: var(--l26-fg);
+  }
+
+  & table.tableblock > thead > tr > th {
+    border-bottom-color: var(--l26-border);
+  }
+
+  & table.tableblock > tbody > tr:nth-of-type(even) {
+    background: var(--l26-table-head-bg);
+  }
+
+  & :is(table.stripes-all > tbody > tr, table.stripes-odd > tbody > tr:nth-of-type(odd), table.stripes-even > tbody > tr:nth-of-type(even), table.stripes-hover > tbody > tr:hover) {
+    background: var(--l26-table-head-bg);
+  }
+
+  /* ---- Images and diagrams (Mermaid / SVG / Kroki) ---------------- *
+   * Only the area OUTSIDE the diagram is fixed to the light background.
+   * Diagram internals (nodes, lines, text) are left to the renderer. */
+  & :is(.mermaid, pre.mermaid, .mermaid svg, .imageblock .content, .imageblock img[src$=".svg"], .imageblock svg, .imageblock object) {
+    background-color: var(--l26-bg);
+  }
+
+  & :is(.imageblock.kroki img, .imageblock.kroki object, .imageblock.kroki svg, .image.kroki img) {
+    background: var(--l26-bg);
+  }
+}

@@ -147,3 +147,12 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Local tool metadata and build output
+.orca/
+.claude/
+.codex/
+.copilot/
+.coord/
+artifact/
+*.vsix
