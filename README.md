@@ -31,7 +31,7 @@ Node.js（`npx` を含む）と、PATH 上の `code` コマンドが必要です
 publish.bat
 ```
 
-`artifact/` に次を生成します。`publish.bat` はリポジトリ直下の `artifact/` だけを作り直し、Git 操作や GitHub への公開は行いません。
+`artifact/` に次を生成します。`publish.bat` は `artifact/.staging/` で生成・検証してから `artifact/` の成果物を差し替えます。Git 操作や GitHub への公開は行いません。`publish.bat clean` は `artifact/.staging/` だけを削除し、最新の VSIX と `install.cmd` は保持します。
 
 ```text
 artifact/
