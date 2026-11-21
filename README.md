@@ -4,8 +4,8 @@ VS Code の AsciiDoc Preview（[Asciidoctor VS Code](https://marketplace.visuals
 
 [vscode-markdown-preview-style](https://github.com/hironei/vscode-markdown-preview-style) と同じ配色を使います。
 
-- レンダリングは Asciidoctor VS Code に任せます。独自のレンダラ、常駐プロセス、コマンドは持ちません。
-- `contributes["asciidoc.previewStyles"]` で `style.css` を登録するだけなので、`settings.json` の設定は不要です。ユーザー設定・ワークスペース設定を書き換えません。
+- レンダリングは Asciidoctor VS Code に任せます。独自のレンダラや常駐プロセスは持ちません。
+- Asciidoctor VS Code 4.3.0 は、他の拡張が `contributes["asciidoc.previewStyles"]` で登録したスタイルをプレビュー（Webview）に読み込めません。そのため、この拡張は起動時に、標準スタイルと `style.css` を連結したバンドルを生成し、**ユーザー設定**の `asciidoc.preview.style` をそのファイルに設定します（設定の編集は不要です）。詳細は「適用の仕組みと設定への影響」を参照してください。
 - Markdown プレビュー、エディタ、他の Webview には影響しません。
 
 ## 前提
@@ -65,11 +65,46 @@ artifact/
 
 色は固定値で定義しています。`--vscode-*` テーマ変数には依存しないため、テーマを切り替えても変わりません。
 
+## 適用の仕組みと設定への影響
+
+Asciidoctor VS Code 4.3.0 には、次の2つの制約があります（上流のソースで確認。Webview の失敗レスポンスの実機採取は未実施です）。
+
+- `asciidoc.previewStyles` で提供されたスタイルの場所が、Webview の読み取り許可ルートに追加されない。
+- `asciidoc.preview.additionalStyles` に拡張フォルダの CSS を指定しても同様に読み込めない。`asciidoc.preview.style` に**絶対パス**（バックスラッシュ区切りの Windows パス）を指定した場合だけ、そのファイルのフォルダが許可される。
+
+この拡張は、次のように回避します。
+
+1. 起動時（と、Asciidoctor VS Code の更新・関連設定の変更時）に、インストール済みの Asciidoctor VS Code の標準スタイル（`asciidoc.preview.defaultStyle` に対応するもの）と `style.css` を連結した `asciidoc-preview-light-2026.css` を、この拡張のグローバルストレージ（`context.globalStorageUri`）に生成します。保存先は実行時に動的に決まり、ユーザー名・パス・拡張のバージョンに依存しません（Scoop のポータブル構成を含む）。`vscode` 以外の標準スタイルは相対参照するフォントも同じフォルダへコピーします。
+2. ユーザー設定の `asciidoc.preview.style` を、そのファイルの絶対パスに設定します。標準スタイルをバンドルに含めるため、`preview.style` による置き換えでも標準の見た目が維持されます。
+
+設定の扱い:
+
+| 状況 | 動作 |
+| --- | --- |
+| `asciidoc.preview.style` が未設定 | 初回にバンドルを設定する |
+| ユーザーが別の値を設定済み | **変更しない**（出力チャンネル「AsciiDoc Preview Style」に記録）。コマンド `AsciiDoc Preview Style: Enable Light 2026` を実行し、置き換えを確認すると適用できる |
+| ユーザーが（この拡張が設定した値を）空にした | 以後、自動では再設定しない（`Enable` コマンドで再設定） |
+| ワークスペース／フォルダ設定に `asciidoc.preview.style` がある | そちらが優先され、そのワークスペースでは Light 2026 が適用されない（出力チャンネルに記録） |
+| `asciidoc.preview.additionalStyles` | 変更しない（バンドルの後に読み込まれる） |
+| 文書の `stylesheet` 属性 | **無効になる**。Asciidoctor VS Code は `asciidoc.preview.style` が設定されている間、文書の `stylesheet` 属性を参照しない（上流の仕様。`asciidocPreviewStyle.mode: off` で回避できるが、その間は Light 2026 も適用されない） |
+| 標準スタイルの種類 | **ユーザー設定**の `asciidoc.preview.defaultStyle`（空は `vscode`、`useEditorStyle: false` は `asciidoctor`）から決め、設定変更時に再生成する。バンドルは全ウィンドウで1つで、ワークスペース／フォルダ単位の `defaultStyle` や Antora 文書の自動切替は反映されない（制限） |
+
+### 無効化・復元・アンインストール
+
+- 設定 `asciidocPreviewStyle.mode` を `off` にするか、コマンド `AsciiDoc Preview Style: Restore (remove from user settings)` を実行すると、この拡張が設定した `asciidoc.preview.style` を削除します（ユーザーが設定した別の値は削除しません）。
+- アンインストール時は、`vscode:uninstall` フックが、アンインストール元と同じインストール（ポータブル構成、または標準配置の VS Code／Insiders／VSCodium のうち拡張フォルダの親が一致するもの）の `settings.json` から、**トップレベルの** `asciidoc.preview.style` のうち、そのインストールのバンドルと**完全に一致する値**だけを削除します。それ以外（別の値、ネスト内の同名キー、別のインストール、場所を特定できない配置）は変更しません。
+- **残留リスク**: フックが実行されない場合（設定ファイルの場所が特殊、Settings Sync で他の端末から戻ったなど）は、存在しないファイルを指す `asciidoc.preview.style` が残り、プレビューのスタイルが当たらなくなります。その場合は `settings.json` から `asciidoc.preview.style` を削除してください。
+- Settings Sync を使う場合、端末固有の絶対パスが他の端末へ同期され得ます。端末ごとに拡張を導入し、同期しない設定として扱うことを推奨します。
+
+### 上流の修正後
+
+`package.json` の `asciidoc.previewStyles` の登録は残しています。上流が修正されたら、`lib/core.js` の `UPSTREAM_FIXED_VERSION` に修正済みバージョンを設定すると、そのバージョン以上では回避処理が自動的に外れ、この拡張が設定した `asciidoc.preview.style` を削除して通常の `previewStyles` 方式に戻ります（二重適用なし）。それ以前でも `asciidocPreviewStyle.mode: off` で手動で切り替えられます。
+
 ## 標準スタイルとの優先順位
 
-Asciidoctor VS Code は、拡張が提供するスタイルを標準スタイル（`asciidoctor-editor.css` など）より**先に**読み込みます。同じ詳細度では標準スタイルが勝つため、`style.css` の各ルールは `:not(#l26)` を付けて、基底のスコープとして ID 1 つ分の詳細度を加えています（セレクタによっては、`#toc` のように ID を含むため、最終的な詳細度は ID 2 つ分になります）。`!important` は、標準スタイルが `!important` で色を指定しているコールアウト番号の文字色（`.conum`）にだけ使っています。
+生成したバンドルでは `style.css` を標準スタイルの**後**に置きますが、上流が修正されて `previewStyles` 方式に戻った場合は、拡張が提供するスタイルは標準スタイル（`asciidoctor-editor.css` など）より**先に**読み込まれます。同じ詳細度では標準スタイルが勝つため、`style.css` の各ルールは `:not(#l26)` を付けて、基底のスコープとして ID 1 つ分の詳細度を加えています（セレクタによっては、`#toc` のように ID を含むため、最終的な詳細度は ID 2 つ分になります）。`!important` は、標準スタイルが `!important` で色を指定しているコールアウト番号の文字色（`.conum`）にだけ使っています。
 
-- `asciidoc.preview.style`（置き換えスタイル）、`asciidoc.preview.additionalStyles`、文書の `stylesheet` 属性で指定したスタイルは、標準スタイルと同様にこの拡張の `style.css` の**後**に読み込まれます。ただし `style.css` は ID 1 つ分の詳細度を持つため、通常のクラスセレクタで指定した色は `style.css` が優先されます。これらで色を変えたい場合は、対象の ID を含むセレクタ（ID 2 つ分以上）にして詳細度を上げるか、`!important` を使ってください（仕様上の限界です）。この拡張は、指定されたスタイルの読み込み自体を無効化・変更しません。
+- `asciidoc.preview.additionalStyles` で指定したスタイルは、バンドルの**後**に読み込まれます。文書の `stylesheet` 属性は、`asciidoc.preview.style` が設定されている間は使われません（上記の表のとおり）。ただし `style.css` は ID 1 つ分の詳細度を持つため、通常のクラスセレクタで指定した色は `style.css` が優先されます。これらで色を変えたい場合は、対象の ID を含むセレクタ（ID 2 つ分以上）にして詳細度を上げるか、`!important` を使ってください（仕様上の限界です）。この拡張は、指定されたスタイルの読み込み自体を無効化・変更しません。
 - `asciidoc.preview.defaultStyle` が `vscode`（既定）以外（`asciidoctor`、`antora`、`github`）の場合も、背景・本文・リンク・コード・表・引用・注記などの主な色は `style.css` で固定します。ただし、標準スタイルの見た目を前提にした細部の調整は、`vscode`（既定）で確認しています。
 
 ## 確認手順
@@ -80,7 +115,7 @@ Asciidoctor VS Code は、拡張が提供するスタイルを標準スタイル
 2. フォルダを開かずに `.adoc` ファイルを開いた場合と、複数のワークスペースで、同じ配色であることを確認します。
 3. 見出し、リンク、インラインコード、ソース / リテラルブロック、リスト、表（見出し・罫線・縞表示）、引用、サイドバー、Example ブロック、NOTE / TIP / IMPORTANT / WARNING / CAUTION、画像、目次（`:toc:`）が崩れずに表示されることを確認します。
 4. 文書を編集してプレビューが自動更新されること、エディタとプレビューのスクロールが同期すること、目次リンクの見出しジャンプ、`include::` が動作することを確認します。
-5. Markdown のプレビューやエディタの表示色が変わらないこと、`settings.json` に変更が生じていないことを確認します。
+5. Markdown のプレビューやエディタの表示色が変わらないこと、``settings.json` の変更が、ユーザー設定の `asciidoc.preview.style` の1件だけであることを確認します。
 
 ## Mermaid / SVG と図の可読性
 
@@ -99,7 +134,7 @@ Asciidoctor VS Code は、拡張が提供するスタイルを標準スタイル
 
 ## 開発メモ
 
-動作の基準は Asciidoctor VS Code 4.2.2（`getStyles()` は拡張が提供するスタイルを標準スタイルより先に挿入）と VS Code 1.97 です。実機の最小対応バージョンは、依存 API の実機検証に基づいて確定します。
+動作の基準は Asciidoctor VS Code 4.3.0 と VS Code 1.97 です。テストは `npm test`（`node --test`。判定ロジックとバンドル生成、`settings.json` の削除処理を検証）です。VSIX を実機に導入したときの配色・各要素の表示確認は、「確認手順」で行います。実機の最小対応バージョンは、依存 API の実機検証に基づいて確定します。
 
 ## ライセンス
 

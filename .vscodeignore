@@ -9,3 +9,4 @@ publish.bat
 scripts/**
 .gitignore
 .vscodeignore
+test/**

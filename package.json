@@ -23,9 +23,45 @@
   "extensionDependencies": [
     "asciidoctor.asciidoctor-vscode"
   ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "asciidoc.previewStyles": [
       "./style.css"
-    ]
+    ],
+    "commands": [
+      {
+        "command": "asciidocPreviewStyle.enable",
+        "title": "AsciiDoc Preview Style: Enable Light 2026"
+      },
+      {
+        "command": "asciidocPreviewStyle.restore",
+        "title": "AsciiDoc Preview Style: Restore (remove from user settings)"
+      }
+    ],
+    "configuration": {
+      "title": "AsciiDoc Preview Light 2026 Style",
+      "properties": {
+        "asciidocPreviewStyle.mode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ],
+          "default": "auto",
+          "enumDescriptions": [
+            "Apply the Asciidoctor VS Code 4.3.0 workaround (sets the user-level asciidoc.preview.style to a generated bundle).",
+            "Do not manage asciidoc.preview.style; remove the value this extension set. Only the asciidoc.previewStyles contribution remains."
+          ],
+          "markdownDescription": "How the Light 2026 style is applied. Asciidoctor VS Code 4.3.0 does not load styles contributed through `asciidoc.previewStyles`, so `auto` writes a bundle (standard CSS + Light 2026) and points the user-level `asciidoc.preview.style` at it."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "vscode:uninstall": "node ./uninstall.js"
   }
 }
